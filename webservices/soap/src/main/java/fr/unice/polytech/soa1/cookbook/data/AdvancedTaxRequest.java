@@ -7,15 +7,15 @@ import javax.xml.bind.annotation.XmlType;
 public class AdvancedTaxRequest extends SimpleTaxRequest {
 
 	private float assets;
-	private int zone;
+	private String zone;
 
 	@XmlElement(required = true)
 	public float getAssets() { return assets; }
 	public void setAssets(float assets) { this.assets = assets; }
 
 	@XmlElement(required = true)
-	public int getZone() { return zone; }
-	public void setZone(int zone) { this.zone = zone; }
+	public String getZone() { return zone; }
+	public void setZone(String zone) { this.zone = zone; }
 
 	@Override
 	public String toString() {

@@ -40,13 +40,13 @@ public class TaxComputationImpl implements TaxComputationService {
 	 ** Mock for the Business Logic Layer **
 	 ***************************************/
 
-	public float computeIncome(float i, int code) {
-		float coeff = (float) (code < 50 ? 0.2 : 0.18 );
+	public float computeIncome(float i, String code) {
+		float coeff = (float) (!code.startsWith("1") ? 0.2 : 0.18 );
 		return i * coeff;
 	}
 
-	public float computeAssets(float a, int code) {
-		float coeff = (float) (code < 50 ? 0.12 : 0.1 );
+	public float computeAssets(float a, String code) {
+		float coeff = (float) (!code.startsWith("1") ? 0.12 : 0.1 );
 		return a * coeff;
 	}
 
