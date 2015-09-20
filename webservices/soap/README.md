@@ -28,13 +28,14 @@ We are using Maven to support the build. Here is the structure of a valid Maven 
     azrael:soap mosser$ tree .
     .
     ├── pom.xml
-    └── src
-        ├── main
-        │   └── resources
-        └── test
+    ├── src
+    │   └── main
+    │       ├── java
+    │       └── resources
+    └── test
 
   * The `pom.xml` file describes the project
-  * The `src/main` directory contains the source code of the service
+  * The `src/main/java` directory contains the source code of the service
   * The `src/main/resources` directory contains additional resources
   * The `test` directory contains the unit testing source code for the service
 
