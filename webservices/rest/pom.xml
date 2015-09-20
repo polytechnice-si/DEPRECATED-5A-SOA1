@@ -39,6 +39,12 @@
       <artifactId>org.apache.servicemix.bundles.commons-httpclient</artifactId>
       <version>3.1_7</version>
     </dependency>
+    <!-- Json data model -->
+    <dependency>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+      <version>20141113</version>
+    </dependency>
   </dependencies>
   
     <build>
@@ -60,6 +66,8 @@
         </executions>
         <configuration>
           <instructions>
+            <Embed-Dependency>*;scope=compile;inline=false</Embed-Dependency>
+            <Embed-Transitive>true</Embed-Transitive>
             <Bundle-SymbolicName>${bundle.symbolicName}</Bundle-SymbolicName>
             <Bundle-Version>${project.version}</Bundle-Version>
             <Export-Package>
