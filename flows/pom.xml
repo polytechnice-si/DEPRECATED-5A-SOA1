@@ -6,15 +6,15 @@
   <modelVersion>4.0.0</modelVersion>
   
   <groupId>fr.unice.polytech.soa1</groupId>
-  <artifactId>ws-rest</artifactId>
+  <artifactId>ws-flows</artifactId>
   <version>1.0</version>
   <packaging>bundle</packaging>
-  <name>SOA1 :: REST-based implementation</name>
+  <name>SOA1 :: Integration Flows with Apache Camel</name>
 
   <properties>
-    <!-- Version for dependencies (CXF + JUnit) -->
+    <!-- Version for dependencies (Camel + JUnit) -->
     <junit.version>4.12</junit.version>
-    <cxf.version>3.1.2</cxf.version>
+    <camel.version>2.15.2</camel.version>
     <!-- OSGI bundle information (needed to deploy on ServiceMix) -->
     <bundle.symbolicName>${project.artifactId}</bundle.symbolicName>
     <bundle.namespace>fr.unice.polytech.soa1.cookbook</bundle.namespace>
@@ -28,29 +28,24 @@
       <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
-    <!-- CXF HTTP/REST implementation -->
+    <!-- Apache Camel Integration Flow -->
     <dependency>
-      <groupId>org.apache.servicemix.specs</groupId>
-      <artifactId>org.apache.servicemix.specs.jsr339-api-2.0</artifactId>
-      <version>2.5.0</version>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-core</artifactId>
+      <version>${camel.version}</version>
     </dependency>
+    <!-- Apache Camel CSV processing artifacts -->
     <dependency>
-      <groupId>org.apache.servicemix.bundles</groupId>
-      <artifactId>org.apache.servicemix.bundles.commons-httpclient</artifactId>
-      <version>3.1_7</version>
-    </dependency>
-    <!-- Json data model -->
-    <dependency>
-      <groupId>org.json</groupId>
-      <artifactId>json</artifactId>
-      <version>20141113</version>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-csv</artifactId>
+      <version>${camel.version}</version>
     </dependency>
   </dependencies>
-  
-    <build>
-      <plugins>
-	<!-- Maven build plugin to create an OSGI bundle instead of a plain JAR file-->
-	<plugin>
+
+  <build>
+    <plugins>
+      <!-- Maven build plugin to create an OSGI bundle instead of a plain JAR file-->
+      <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <extensions>true</extensions>
@@ -66,21 +61,10 @@
         </executions>
         <configuration>
           <instructions>
-            <!-- <Embed-Dependency>*;scope=compile;inline=false</Embed-Dependency>
-            <Embed-Transitive>true</Embed-Transitive>   -->
             <Bundle-SymbolicName>${bundle.symbolicName}</Bundle-SymbolicName>
             <Bundle-Version>${project.version}</Bundle-Version>
-            <Export-Package>
-	      ${bundle.namespace}.rest.*;version="${project.version}"
-	    </Export-Package>
-            <Import-Package>
-              javax.xml.bind,
-              javax.xml.bind.annotation,
-              javax.ws.rs,
-              javax.ws.rs.core,
-              javax.ws.rs.ext,
-              org.osgi.service.blueprint
-            </Import-Package>
+            <Import-Package>*</Import-Package>
+            <Export-Package>${bundle.namespace}.flows.*;version="${project.version}"</Export-Package>
           </instructions>
         </configuration>
       </plugin>
