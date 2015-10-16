@@ -14,6 +14,6 @@ public class Endpoints {
 
 	public static String HANDLE_CITIZEN_ASYNCHRONOUS = "activemq:handleACitizen";
 
-	public static String HANDLE_CITIZEN_SYNCHRONOUS = "activemq:handleACitizen";
+	public static String HANDLE_CITIZEN_SYNCHRONOUS = "direct:handleACitizen";
 
 }
