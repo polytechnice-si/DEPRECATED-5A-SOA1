@@ -21,13 +21,6 @@
   </properties>
   
   <dependencies>
-    <!-- JUnit for unit tests purpose -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit.version}</version>
-      <scope>test</scope>
-    </dependency>
     <!-- Apache Camel Integration Flow -->
     <dependency>
       <groupId>org.apache.camel</groupId>

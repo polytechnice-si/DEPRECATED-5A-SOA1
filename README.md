@@ -1,8 +1,8 @@
-# SOA: Integration & ESB Cookbook
+# SOA1: Integration & ESB Cookbook
 
   * Author: [Sébastien Mosser](mosser@i3s.unice.fr)
   * Reviewer: [Mireille Blay-Fornarino](blay@i3s.unice.fr)
-  * Version: 2.0
+  * Version: 2.0 (2015)
 
 This repository is a set or _recipes_ to be used as a support for the SOA-1 course. The goal of a _recipe_ is to describe an up and running system, and how one can reproduce it step by step.
 
@@ -13,7 +13,7 @@ This repository is a set or _recipes_ to be used as a support for the SOA-1 cour
 The first version of this course (2012) was using Petals ESB. It then evolves to Mule (2013, 2014). Based on the feedback received from the students and according to the 8 weeks time box of the course, we finally decided to re-implement it (again...) using the open source suite developed by Apache. Thus, the technological stack is the following:
 
   * Enterprise Service Bus: [Apache Service Mix](http://servicemix.apache.org/) (6.0.0)
-  * Routing: [Apache Camel](http://camel.apache.org/)
+  * Routing: [Apache Camel](http://camel.apache.org/) (2.15.2)
   * Service Definition: [Apache CXF](http://cxf.apache.org/)
     * SOAP: JAX-WS specification
     * REST: JAX-RS specification
@@ -32,3 +32,50 @@ The file system is organized as the following:
   * `webservices/soap`: example of SOAP-based web services
   * `webservices/rest`: example of REST-based web services
   * `flows`: integration flows binding TPS and TAIS together.
+
+## Building and deploying the examples
+
+Use maven to build the examples from the root directory:
+
+    azrael:5A-2015-SOA-1 mosser$ mvn clean package
+
+The compilation process should end wit a ``BUILD SUCESS`` information message. It produces 3 JARs artefacts:
+
+    azrael:5A-2015-SOA-1 mosser$ find . -name '*.jar'
+      ./flows/target/ws-flows-1.0.jar
+      ./webservices/rest/target/ws-rest-1.0.jar
+      ./webservices/soap/target/ws-soap-1.0.jar
+
+To deploy the system inside the ESB, simply copy these artefacts to the `deploy`  directory of ServiceMix (here installed in the `servicemix` directory):
+
+    azrael:5A-2015-SOA-1 mosser$ find . -name '*.jar' \
+                                   -exec cp {} servicemix/deploy/. \; 
+    
+When starting Service mix, the artefacts are shown in the list of deployed components:
+
+```
+azrael:servicemix mosser$ ./bin/servicemix
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=256M; support was removed in 8.0
+Please wait while Apache ServiceMix is starting...
+100% [========================================================================]
+
+Karaf started in 12s. Bundle stats: 242 active, 243 total
+ ____                  _          __  __ _      
+/ ___|  ___ _ ____   _(_) ___ ___|  \/  (_)_  __
+\___ \ / _ \ '__\ \ / / |/ __/ _ \ |\/| | \ \/ /
+ ___) |  __/ |   \ V /| | (_|  __/ |  | | |>  < 
+|____/ \___|_|    \_/ |_|\___\___|_|  |_|_/_/\_\
+
+  Apache ServiceMix (6.0.0)
+
+karaf@root>bundle:list | grep SOA1
+278 | Active | 80 | 1.0 | SOA1 :: Integration Flows with Apache Camel                            
+281 | Active | 80 | 1.0 | SOA1 :: REST-based implementation          
+282 | Active | 80 | 1.0 | SOA1 :: SOAP-based implementation          
+``` 
+
+### ServiceMix dependencies
+
+If not already deployed, you'll have to install the following dependencies in your installation of ServiceMix:
+
+    karaf@root> feature:install camel-csv
