@@ -36,6 +36,7 @@ public class HandleACitizen extends RouteBuilder {
 					.otherwise()
 						.to("direct:badCitizen").stop() // stopping the route for bad citizens
 				.end() // End of the content-based-router
+				.setHeader("person_uid", simple("${property.person.uid}"))
 				.multicast()
 					.parallelProcessing()
 					.to("direct:generateLetter")
