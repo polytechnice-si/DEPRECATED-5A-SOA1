@@ -213,7 +213,7 @@ Using the EIP graphical language, this flow is modeled as the following:
 The flow is implemented in the file named `HandleACitizen.java`.
 
 ```java
-from("activemq:handleACitizen)
+from("activemq:handleACitizen")
 	.setProperty("person", body())
 	.to("direct:generator")
 	.setProperty("p_uuid", body())
@@ -339,8 +339,9 @@ from("direct:generateLetter")
 	.to("file:camel/output?fileName=${property.p_uuid}.txt")
 ```
 
- 
+## Step #6: Expose integration flows as services
 
+_todo_
 
 
 
