@@ -58,7 +58,7 @@ The Camel framework allows us to define integration flows as _routes_. We need  
         <package>fr.unice.polytech.soa1.cookbook.flows</package>
     </camelContext>
 
-## Step #4: Creating a flow using the Java DSL
+## Step #4: Creating a simple flow using the Java DSL
 
 A flow is defined in a simple Java class that extends the `RouteBuilder` superclass defined by Camel. It defines a `configure` method, allowing designers to build one (or more) flow.
 
@@ -188,3 +188,19 @@ The flow listens to a directory named `camel/input`. This directory is relative 
   3. The flow listens to the following directory: `./camel/input` (create it if it does not exist)
 
 ## Step #5: Consuming Web Services from a Camel Flow
+
+We can now design the flow dedicated to the integration of the Tax Computation System, _i,e,_, the flow that will actually compute the amount of tax each tax payer present in the CSV file have to pay.
+
+The logic of the integration flow is the following:
+
+  1. Call the UUID generator (Restful service) to obtain an UUID associated to the current Person
+  2. Based on the income of this person:
+    * if the income is greater than 42,000Kr, use the `complex` computation method
+    * if the income is lesser than 42,000Kr and positive, use the `simple` computation method
+    * if the income is negative, identify an issue with this citizen (e.g., log it)
+  3. In parallel:
+    * Write the letter to be sent to the tax payer by snail mail
+    * trigger an integration flow that will store the amount of tax to be paid in the system 
+
+  
+
