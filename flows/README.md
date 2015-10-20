@@ -197,12 +197,12 @@ The logic of the integration flow is the following:
 
   1. Call the UUID generator (Restful service) to obtain an UUID associated to the current Person
   2. Based on the income of this person:
-    * if the income is greater than 42,000Kr, use the `complex` computation method
-    * if the income is lesser than 42,000Kr and positive, use the `simple` computation method
+    * if the income is greater than 42,000Kr, use the `complex` computation method to obtain a `TaxForm`
+    * if the income is lesser than 42,000Kr (and positive), use the `simple` computation method to obtain a `TaxForm`
     * if the income is negative, identify an issue with this citizen (e.g., log it)
   3. In parallel:
-    * Write the letter to be sent to the tax payer by snail mail
-    * trigger an integration flow that will store the amount of tax to be paid in the system 
+    * Write the letter to be sent to the tax payer by snail mail using the `Person` and the `TaxForm` data
+    * Trigger an integration flow that will store the amount of tax to be paid in the system 
 
 Using the EIP graphical language, this flow is modeled as the following:
 ![](https://raw.githubusercontent.com/polytechnice-si/5A-2015-SOA-1/develop/flows/docs/handleACitizen.png)
@@ -229,9 +229,121 @@ from("activemq:handleACitizen)
 			.to("direct:badCitizen").stop() // stopping the route for bad citizens
 	.end() // End of the content-based-router
 	.multicast()
+		.parallelProcessing()
 		.to("direct:generateLetter")
 		.to(STORE_TAX_FORM)
 ;
 ```
+
+
+
+### Adapting the exchanged message: Data Enricher, Content Filter, Claim Check.
+
+The flow calls the UUID generator, and as a consequence must store _somewhere_ the received Person. The very same situation occurs with the received UUID, which must be stored as the remaining flow works on a Person. It also happens when the flow must remember which computation method is actually used. These steps are modeled as _Claim Checks_ in the flow, considering that the key maps to the concept one wants to remember.
+
+Using Camel, this _trick_ is done using the `Property` concept. One can store an `Object` in a property using the `setProperty` flow element. To retrieve a property `p`, the [SIMPLE](http://camel.apache.org/simple.html) language allows one to access it as the following: `${property.p}`
+
+The content of the body can be adapted directly using the `setBody` method. For example, calling `setBody(${property.p})` replaces the current body by the value of `p`. In our case, it is useful to replace the computed UUID by a Person, as the remaining flow elements work on a Person.
   
+### Routing Messages: Choice and Multicast propagation  
+
+The `choice` construction implements conditional branching. Each branch is designed using a `when` construction, and the default case uses the `otherwise` keyword. Conditions are expressed using the [SIMPLE](http://camel.apache.org/simple.html) language, which allows one to access message attributes in a _simple_ way.
+
+In the designed flow, the default case matches when we do not have enough information to compute the tax to be paid for the current citizen. As a consequence the flow must be ended here for this citizen. We use the `stop` keyword to model this design decision. The `end` keyword is used to close the choice and join the remaining routes to the next flow element.
+
+At the end of the flow, the computed `TaxForm` is processed by two flows in parallel: _(i)_ the `direct:writeLetter` one to generate the letter to be sent and _(ii)_ a JMS queue used to store the computed forms. This parallel propagation of the very same message (the two channels will receive the exact same message) is designed with the `multicast` construction, coupled to a `parallelProcessing` configuration to enact a concurrent propagation.
+
+### Calling a REST Service
+
+To call a REST service, one simply has to perform a _Request/Reply_ call to the service, using the HTTP transport protocol. In our case, it means to wrap our message in a GET http request, reset the body of the message (a GET does not need to send anything) and perform the call. As the call returns a Stream instead of the contents of the response, we apply a data transformation that will flush this stream, and then remove the extra quotes added by the generator but not really useful in our case.
+
+![](https://raw.githubusercontent.com/polytechnice-si/5A-2015-SOA-1/develop/flows/docs/generator.png)
+
+```java
+from("direct:generator")
+	.setHeader(Exchange.HTTP_METHOD, constant("GET"))
+	.setBody(constant(""))
+	.to("http://localhost:8181/cxf/demo/generators/demogen")
+	.process(readResponseStream)
+	.process(uuidCleaner)
+;
+```
+
+In this implementation, `readResponseStream` and `uuidCleaner` are two processors used to perform the two data transformation at the end of the flow. The details of the implementation are available in the file named `CallExternalPartners.java`.
+
+To suport HTTP endpoints in ServiceMix, install the `camel-http` feature: `feature:install camel-http`
+
+### Calling a SOAP Service
+
+To call a SOAP service, the idea is similar to the REST one. First prepare the request to be sent, then send it using the SOAP protocol on top of HTTP and finally process te response to create a business object.
+
+![](https://raw.githubusercontent.com/polytechnice-si/5A-2015-SOA-1/develop/flows/docs/tcs_soap.png)
+
+```java
+from("direct:simpleTaxMethod")
+	.bean(RequestBuilder.class, "buildSimpleRequest(${body}, ${property.p_uuid})")
+	.to("spring-ws://http://localhost:8181/cxf/TaxComputation")
+	.process(result2taxForm)
+;
+```
+
+The endpoint starting with `spring-ws://` triggers the use of the SOAP protocol, automatically. We do not have to focus on SOAP concepts, and we only focus on the exchanged messages (as XML document) in the request and in the response. To support it in ServiceMix: `feature:install camel-spring-ws `
+
+To build the request, we use a helper bean that is dedicated to this task. A bean is a simple java class, and the `bean` construction allows one to call a given method from a class as a flow activity. The implementation of the bean is a classical java class. Arguments of the called method are bound using the SIMPLE language.
+
+```java
+public class RequestBuilder {
+
+	public String buildSimpleRequest(Person p, String uuid) {
+		StringBuilder builder = new StringBuilder();
+		builder.append("<cook:simple xmlns:cook=\"http://cookbook.soa1.polytech.unice.fr/\">\n");
+		builder.append("  <simpleTaxInfo>\n");
+		builder.append("    <id>"     + uuid          + "</id>\n");
+		builder.append("    <income>" + p.getIncome() + "</income>\n");
+		builder.append("  </simpleTaxInfo>\n");
+		builder.append("</cook:simple>");
+		return builder.toString();
+	}
+	
+	// ...
+}
+```
+
+To retrieve the data useful to fill a `TaxForm` for this citizen, we use XPath on the retrieved XML response with a processor named `result2taxForm`. One can also decide to use JAXB and the `unmarshal` construction to automate this task for complex responses. The XPath processor does not come by default in ServiceMix, use the `feature:install camel-saxon` command to load it
+
+```java
+private static Processor result2taxForm = new Processor() {
+	private XPath xpath = XPathFactory.newInstance().newXPath();    
+
+	public void process(Exchange exchange) throws Exception {
+		Source response = (Source) exchange.getIn().getBody();
+		TaxForm result = new TaxForm();
+		result.setAmount(Double.parseDouble(xpath.evaluate("//amount/text()", response)));
+		result.setDate(xpath.evaluate("//date/text()", response));
+		exchange.getIn().setBody(result);
+	}
+};
+```
+
+### Dynamic endpoint
+
+In our example, we produce one letter per citizen. Thus, the output file used to store the letter is dynamically computed based on the current flow execution. In other case, one might have to access to a remote service with an URL associated to the currently handled data (_e.g._, the id of an Order to be added at the end of a GET request URL). 
+
+As endpoints are simple string, dynamic endpoints are done thanks to string manipulation. In our case, the `file` endpoint expects a directory, and the output file can be provided as a parameter using the `fileName` option. The SIMPLE language can be used in a `to` construction to dynamically address an endpoint.
+
+In the following flow, we use a bean to write the letter, and then a dynamic endpoint to store the letter in a file named after the retrieved UUID for this person.
+
+```java
+from("direct:generateLetter")
+	.bean(LetterWriter.class, "write(${property.person}, ${body}, ${property.tax_computation_method})")
+	.to("file:camel/output?fileName=${property.p_uuid}.txt")
+```
+
+ 
+
+
+
+
+ 
+
 

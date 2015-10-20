@@ -78,4 +78,6 @@ karaf@root>bundle:list | grep SOA1
 
 If not already deployed, you'll have to install the following dependencies in your installation of ServiceMix:
 
-    karaf@root> feature:install camel-csv
+    karaf@root> feature:install camel-csv camel-http camel-saxon camel-spring-ws
+    
+ 
