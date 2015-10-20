@@ -1,7 +1,9 @@
 package fr.unice.polytech.soa1.cookbook.flows.business;
 
 
-public class TaxForm {
+import java.io.Serializable;
+
+public class TaxForm implements Serializable {
 
 	private double amount;
 	private String date;

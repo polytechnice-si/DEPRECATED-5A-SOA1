@@ -35,8 +35,9 @@ public class HandleACitizen extends RouteBuilder {
 						.to("direct:simpleTaxMethod")
 					.otherwise()
 						.to("direct:badCitizen").stop() // stopping the route for bad citizens
-					.end() // End of the content-based-router
+				.end() // End of the content-based-router
 				.multicast()
+					.parallelProcessing()
 					.to("direct:generateLetter")
 					.to(STORE_TAX_FORM)
 		;

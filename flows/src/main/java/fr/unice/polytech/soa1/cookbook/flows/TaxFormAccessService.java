@@ -9,7 +9,8 @@ public class TaxFormAccessService extends RouteBuilder {
 	@Override
 	public void configure() throws Exception {
 
-		from(STORE_TAX_FORM).to("log:storing");
+		from(STORE_TAX_FORM)
+				.to("log:storing");
 
 	}
 

@@ -73,7 +73,6 @@ public class CallExternalPartners extends RouteBuilder {
 		public void process(Exchange exchange) throws Exception {
 			String data = (String) exchange.getIn().getBody();
 			String cleaned = data.substring(1,data.length()-1);
-			System.out.println(cleaned);
 			exchange.getIn().setBody(cleaned);
 		}
 	};

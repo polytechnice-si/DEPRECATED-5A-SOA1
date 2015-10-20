@@ -173,6 +173,8 @@ As a consequence, we simply change the URI to a pattern that will bind the endpo
 
 By simply changing the pattern, the ESB will create an ActiveMQ queue, support asynchronous messaging and make your flow execution parallel. Automagically.
 
+__Remark__: Everything comes with a cost. Contrarily to the `direct` endpoint which is internal, using a JMS queue in your flow implies that your business objects are consistent with the exchange protocol. In our case, the body of a JMS message must implement `Serializable` (the message body will be null elsewhere).
+
 ### Deploying and running the flow
 
 To build the OSGi bundle, we rely on maven to package the code:
@@ -202,5 +204,34 @@ The logic of the integration flow is the following:
     * Write the letter to be sent to the tax payer by snail mail
     * trigger an integration flow that will store the amount of tax to be paid in the system 
 
+Using the EIP graphical language, this flow is modeled as the following:
+![](https://raw.githubusercontent.com/polytechnice-si/5A-2015-SOA-1/develop/flows/docs/handleACitizen.png)
+
+
+### Implementing the flow with Camel
+
+The flow is implemented in the file named `HandleACitizen.java`.
+
+```java
+from("activemq:handleACitizen)
+	.setProperty("person", body())
+	.to("direct:generator")
+	.setProperty("p_uuid", body())
+	.setBody(simple("${property.person}"))
+	.choice()
+		.when(simple("${body.income} >= 42000"))
+			.setProperty("tax_computation_method", constant("COMPLEX"))
+			.to("direct:complexTaxMethod")
+		.when(simple("${body.income} >= 0 && ${body.income} < 42000"))
+			.setProperty("tax_computation_method", constant("SIMPLE"))
+			.to("direct:simpleTaxMethod")
+		.otherwise()
+			.to("direct:badCitizen").stop() // stopping the route for bad citizens
+	.end() // End of the content-based-router
+	.multicast()
+		.to("direct:generateLetter")
+		.to(STORE_TAX_FORM)
+;
+```
   
 
