@@ -66,8 +66,8 @@
         </executions>
         <configuration>
           <instructions>
-            <!-- <Embed-Dependency>*;scope=compile;inline=false</Embed-Dependency>
-            <Embed-Transitive>true</Embed-Transitive>   -->
+            <Embed-Dependency>*;scope=compile;inline=false</Embed-Dependency>
+            <Embed-Transitive>true</Embed-Transitive>
             <Bundle-SymbolicName>${bundle.symbolicName}</Bundle-SymbolicName>
             <Bundle-Version>${project.version}</Bundle-Version>
             <Export-Package>

@@ -19,7 +19,7 @@ The goal of this integration demonstration is to build a system that bind togeth
 
 Two datasets are available: a small one containing 5 taxpayers, and a large one with more data. These datasets are available in the `datasets` directory.
   
-## Development
+## Setup
 
 ### Step #1: Setting up the environment
 
@@ -58,7 +58,7 @@ The Camel framework allows us to define integration flows as _routes_. We need  
         <package>fr.unice.polytech.soa1.cookbook.flows</package>
     </camelContext>
 
-## Creating A flow using the Java DSL
+## Step #4: Creating a flow using the Java DSL
 
 A flow is defined in a simple Java class that extends the `RouteBuilder` superclass defined by Camel. It defines a `configure` method, allowing designers to build one (or more) flow.
 
@@ -172,3 +172,19 @@ To switch to asynchronous messaging, we have to rely on another kind of connexio
 As a consequence, we simply change the URI to a pattern that will bind the endpoint to an ActiveMQ one (JMS implementation provided by apache and optimized for Camel): `to("activemq:handleACitizen);`
 
 By simply changing the pattern, the ESB will create an ActiveMQ queue, support asynchronous messaging and make your flow execution parallel. Automagically.
+
+### Deploying and running the flow
+
+To build the OSGi bundle, we rely on maven to package the code:
+
+    azrael:flows mosser$ mvn clean package
+    
+Like any OSGi bundle, copy-paste the jar created in the `target` directory in the `deploy` directory of your local ServiceMix installation.
+
+The flow listens to a directory named `camel/input`. This directory is relative to the path of the ServiceMix local installation. If your system is located in the `servicemix` directory:
+
+  1. Go to this directory: `cd /.../servicemix`
+  2. Start the ESB: `./bin/servicemix`
+  3. The flow listens to the following directory: `./camel/input` (create it if it does not exist)
+
+## Step #5: Consuming Web Services from a Camel Flow

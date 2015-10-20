@@ -33,7 +33,7 @@ public class HandleCSVFile extends RouteBuilder {
 				.process(csv2person)
 				.log("  Transferring to the route that handle a given citizen")
 				//.to(HANDLE_CITIZEN_SYNCHRONOUS)    // Synchronous transfer    ( direct:...   )
-				.to(HANDLE_CITIZEN_ASYNCHRONOUS)   // Async transfer with JMS ( activemq:... )
+				.to(HANDLE_CITIZEN)   // Async transfer with JMS ( activemq:... )
 				;
 
 	}
@@ -59,7 +59,7 @@ public class HandleCSVFile extends RouteBuilder {
 			// retrieving the body of the exchanged message
 			Map<String, Object> input = (Map<String, Object>) exchange.getIn().getBody();
 			// transforming the input into a person
-			Person output = builder(input);
+			Person output =  builder(input);
 			// Putting the person inside the body of the message
 			exchange.getIn().setBody(output);
 		}

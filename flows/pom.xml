@@ -33,6 +33,17 @@
       <artifactId>camel-csv</artifactId>
       <version>${camel.version}</version>
     </dependency>
+    <!-- Apache Camel HTTP support  -->
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-http</artifactId>
+      <version>${camel.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-spring-ws</artifactId>
+      <version>${camel.version}</version>
+    </dependency>
   </dependencies>
 
   <build>
