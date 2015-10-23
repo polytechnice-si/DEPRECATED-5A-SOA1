@@ -29,9 +29,9 @@ The integration scenario developed in this cookbook binds a _Tax Paying System_ 
 
 The file system is organized as the following:
 
-  * `webservices/soap`: example of SOAP-based web services
-  * `webservices/rest`: example of REST-based web services
-  * `flows`: integration flows binding TPS and TAIS together.
+  * [`webservices/soap`](https://github.com/polytechnice-si/5A-2015-SOA-1/tree/develop/webservices/soap): example of SOAP-based web services
+  * [`webservices/rest`](https://github.com/polytechnice-si/5A-2015-SOA-1/tree/develop/webservices/rest): example of REST-based web services
+  * [`flows`](https://github.com/polytechnice-si/5A-2015-SOA-1/tree/develop/flows): integration flows binding TPS and TAIS together.
 
 ## Building and deploying the examples
 
@@ -80,4 +80,26 @@ If not already deployed, you'll have to install the following dependencies in yo
 
     karaf@root> feature:install camel-csv camel-http camel-saxon camel-spring-ws camel-servlet
     
- and reboot your service mix shell to avoid KarafExceptions thrown in the console.
+Reboot your service mix shell to avoid KarafExceptions thrown in the console.
+ 
+## Running the examples
+
+### Exposed Web Services
+
+  * RPC implementation using SOAP:
+    *  Tax Computation Service: [http://localhost:8181/cxf/TaxComputation?wsdl](http://localhost:8181/cxf/TaxComputation?wsdl) (built as a JAX-WS service)
+    *  Tax Form consultation service: [http://localhost:8181/cxf/TaxAccessService?wsdl](http://localhost:8181/cxf/TaxAccessService?wsdl) (built as an integration flow using Camel)
+  * Resource-based implementation:
+    * UUID generator: [http://localhost:8181/cxf/demo?_wadl](http://localhost:8181/cxf/demo?_wadl) (built as a JAX-RS service)
+    * Tax Form consultation service: [http://localhost:8181/camel/rest/taxForm/{person_uid}](http://localhost:8181/camel/rest/taxForm/{person_uid}) (built as an integration flow using Camel)
+
+### Demonstration Scenario
+
+  1. Start the ServiceMix ESB using the following command: `./bin/servicemix`
+  2. Copy one of the integration flow [datasets](https://github.com/polytechnice-si/5A-2015-SOA-1/tree/develop/flows/datasets) into the directory named `./camel/input` (create it if not existing)
+  3. Look at the file generated in the directory named `./camel/output` (create it if not existing)
+  4. Consult the Tax form service:
+    * As a resource, with for example the following URL: [Kevin's tax form](http://localhost:8181/camel/rest/taxForm/2B4A2849-4D5D-FC55-96AF-F88022CDB64D) 
+    * Using a SOAP client like SoapUI: [http://localhost:8181/cxf/TaxAccessService?wsdl](http://localhost:8181/cxf/TaxAccessService?wsdl)
+
+    

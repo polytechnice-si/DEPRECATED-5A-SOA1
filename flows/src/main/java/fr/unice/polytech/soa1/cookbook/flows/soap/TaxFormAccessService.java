@@ -6,7 +6,7 @@ import javax.jws.WebResult;
 import javax.jws.WebService;
 
 
-@WebService(name="TaxFormAccess")
+@WebService(serviceName = "TaxFormAccessService")
 public interface TaxFormAccessService {
 
 
