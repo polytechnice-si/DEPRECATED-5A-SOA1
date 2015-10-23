@@ -2,11 +2,28 @@
 <blueprint
         xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:camelcxf="http://camel.apache.org/schema/blueprint/cxf"
         xsi:schemaLocation="
         http://www.osgi.org/xmlns/blueprint/v1.0.0
         http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd" >
 
-    <!-- to setup camel servlet with OSGi HttpService -->
+
+    <!--
+        ******************************************************
+        * To declare the routes defined for the camel engine *
+        ******************************************************
+    -->
+
+    <camelContext xmlns="http://camel.apache.org/schema/blueprint">
+        <package>fr.unice.polytech.soa1.cookbook.flows</package>
+    </camelContext>
+
+
+    <!--
+        ******************************************************************
+        * To setup camel servlet with OSGi HttpService for REST services *
+        ******************************************************************
+    -->
     <reference id="httpService" interface="org.osgi.service.http.HttpService"/>
 
     <bean class="org.apache.camel.component.servlet.osgi.OsgiServletRegisterer"
@@ -19,8 +36,5 @@
 
     <bean id="camelServlet" class="org.apache.camel.component.servlet.CamelHttpTransportServlet"/>
 
-    <camelContext xmlns="http://camel.apache.org/schema/blueprint">
-        <package>fr.unice.polytech.soa1.cookbook.flows</package>
-    </camelContext>
 
 </blueprint>
