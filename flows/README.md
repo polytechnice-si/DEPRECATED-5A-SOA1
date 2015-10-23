@@ -1,7 +1,7 @@
 #Cookbook: Integration Flows with Apache Camel
 
   * Author: [Sébastien Mosser](mosser@i3s.unice.fr)
-  * Version: 0.1
+  * Version: 1.0
 
 ## Technological Environment
 
@@ -339,12 +339,106 @@ from("direct:generateLetter")
 	.to("file:camel/output?fileName=${property.p_uuid}.txt")
 ```
 
-## Step #6: Expose integration flows as services
+## Step #6: Exposing Integration Flows as Services
 
-_todo_
+### Flows to interact with the TaxForm database
+
+We need two flows to interact with the database: one to store the computed `TaxForm` inside the system and another one to allow the system to query the stored forms.
+
+![](https://raw.githubusercontent.com/polytechnice-si/5A-2015-SOA-1/develop/flows/docs/db_flows.png)
+
+We expose the storing flow using JMS, to support scalability. This flow is triggered by the `HandleACitizen` one, being asynchronous in the way the form are stored ensure that this one will scale while handling multiple citizen at the same time: forms will be stored in the database when enough resources will be available to read them from the waiting queue. From a business point of view, there is more value in computing the tax form than in accessing it.
+
+**Remark**: using JMS as exchange channel between two flows destroy the stored properties. As a consequence, the unique identifier used to store the tax form must be transferred in the headers of the message in the `HandleACitizen` flow. An alternative is to store in the body of the message   all the necessary information (_i.e._, creating a new serializable class binding a `Person` to a `TaxForm` and instantiating it in the body of the message before pushing it to the JMS queue).
+
+The database is mocked as a static hashmap in a Bean, implemented in the `Database` class. The flow used to access to the content of the database assumes that the body of the exchange is the unique identifier associated to each person in the CSV file. It produces as output the amount of tax to be paid
+
+```java
+from("activemq:storeTaxForm)
+		.bean(Database.class, "setData(${header.person_uid}, ${body})")
+;
+
+from("direct:getTaxForm")
+		.bean(Database.class, "getData(${body})")
+		.setBody(simple("${body.amount}"))
+;		
+```
+
+### Service Exposition Architecture 
+
+![](https://raw.githubusercontent.com/polytechnice-si/5A-2015-SOA-1/develop/flows/docs/service_exposition.png)
+
+One of the main advantage of an ESB is the diversity that exists in the multiple connectors available in the bus. We leverage this diversity by exposing the `getTaxForm` integration flow using both REST and SOAP connectors. 
+
+This architecture is implemented in the `TaxFormAccessRoute.java` file.
+
+#### Exposing a flow as a resource
+
+Camel support multiple ways to expose resources over HTTP. The less invasive (_i.e_, the one with few interferences with the other components already deployed in the bus) is to rely on a dedicated servlet (use `feature:install camel-servlet` to install it in ServiceMix). 
+
+This servlet is defined in the `camel-context.xml` file, and basically binds an HTTP listener to a given URL prefix (in our case `/camel/rest`).
+
+```xml
+<reference id="httpService" interface="org.osgi.service.http.HttpService"/>
+
+<bean class="org.apache.camel.component.servlet.osgi.OsgiServletRegisterer"
+      init-method="register"
+      destroy-method="unregister">
+    <property name="alias" value="/camel/rest"/>
+    <property name="httpService" ref="httpService"/>
+    <property name="servlet" ref="camelServlet"/>
+</bean>
+
+<bean id="camelServlet" class="org.apache.camel.component.servlet.CamelHttpTransportServlet"/>
+```
+
+Then, one can rely on the [internal language available in Camel](http://camel.apache.org/rest-dsl.html) to create resources exposed as REST services. the first point is to bind this language to the servlet just defined. Then, one can define a resources `/taxForm/{uid}`, available as a `get`, and redirect it to a camel route. One should notice that this language is different from the integration flow one, and is much more limited. In our case, we need to retrieve the `uid` from the `headers` and transfer it as the body of the exchange to the `getTaxForm` flow. This can only be done in a regular flow, so we create a route dedicated to this task at the implementation level.
+
+```java
+restConfiguration().component("servlet"); 
+
+rest("/taxForm/{uid}")
+		.get()
+		.to("direct:getTaxFormFromREST")
+;
+
+from("direct:getTaxFormFromREST")
+		.setBody(simple("${header.uid}"))
+		.to("direct:getTaxForm")
+;
+```
+
+After deployment, the service is available as `http://localhost:8181/camel/rest/taxForm/{uid}`.
 
 
+#### Exposing a flow as a SOAP service
 
+One can define a SOAP service using a contract-first or code-first approach. In this section, we use a code-first approach as it is much more simple.
+
+The first step is to define the interface of the service to be exposed, as a Java interface.
+
+```java
+@WebService(serviceName = "TaxFormAccessService")
+public interface TaxFormAccessService {
+
+	@WebMethod(operationName = "retrieveTaxFormFromUID")
+	@WebResult(name="amount")
+	double getTaxForm(@WebParam(name="request") String request);
+
+}
+```
+
+Then, we simply create a CXF endpoint to expose this interface as a SOAP service. Considering that this method accepts a String as input, we can directly forward the contents of the body to the  `getTaxForm` flow. The only precaution is to filter based on the `operationName` header.
+
+```java
+from("cxf:/TaxAccessService?serviceClass=fr.unice.polytech.soa1.cookbook.flows.soap.TaxFormAccessService")
+		.filter(simple("${in.headers.operationName} == 'retrieveTaxFormFromUID'"))
+		.to("direct:getTaxForm")
+;
+```
+
+The service is available at the following URL: [http://localhost:8181/cxf/TaxAccessService?wsdl](http://localhost:8181/cxf/TaxAccessService?wsdl)
  
+**Warning**: when an interface exposes multiple operations, this method must be adapted to fit the different operations. fixing this cookbook is still an ongoing work.
 
-
+**Tips**: if for any reason the web service layer start to throw exceptions and server errors, use the following command to reset the web service support in ServiceMix: `feature:uninstall cxf`. If you restart the bus, it will automatically re-install CXF in a proper way with the good dependencies.

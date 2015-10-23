@@ -52,6 +52,7 @@ public class TaxFormAccessRoute extends RouteBuilder {
 
 
 		from("cxf:/TaxAccessService?serviceClass=fr.unice.polytech.soa1.cookbook.flows.soap.TaxFormAccessService")
+				.filter(simple("${in.headers.operationName} == 'retrieveTaxFormFromUID'"))
 				.to("direct:getTaxForm")
 		;
 
