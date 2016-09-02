@@ -20,6 +20,27 @@
 
 
     <!--
+        *************************************************************
+        * Configuring ActiveMQ for trusted objects & Authentication *
+        *************************************************************
+    -->
+
+    <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent">
+        <property name="configuration" ref="jmsConfig"/>
+    </bean>
+
+    <bean id="jmsConfig" class="org.apache.camel.component.jms.JmsConfiguration">
+        <property name="connectionFactory" ref="cf"/>
+    </bean>
+
+    <bean id="cf" class="org.apache.activemq.spring.ActiveMQConnectionFactory">
+        <property name="brokerURL" value="tcp://localhost:61616"/>
+        <property name="trustAllPackages" value="true"/>
+        <property name="userName" value="karaf" />
+        <property name="password" value="karaf" />
+    </bean>
+
+    <!--
         ******************************************************************
         * To setup camel servlet with OSGi HttpService for REST services *
         ******************************************************************
