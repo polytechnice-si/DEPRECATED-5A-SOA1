@@ -1,6 +1,7 @@
 package fr.unice.polytech.soa1.cookbook.flows;
 
 import fr.unice.polytech.soa1.cookbook.flows.utils.Database;
+import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 
 import static fr.unice.polytech.soa1.cookbook.flows.utils.Endpoints.*;
@@ -42,6 +43,7 @@ public class TaxFormAccessRoute extends RouteBuilder {
 		// local route, collecting URL arguments and transferring it to the concrete route
 		from("direct:getTaxFormFromREST")
 				.setBody(simple("${header.uid}"))
+				.setHeader(Exchange.CONTENT_TYPE,constant("text/plain"))
 				.to("direct:getTaxForm")
 		;
 
