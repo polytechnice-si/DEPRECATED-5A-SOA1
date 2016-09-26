@@ -97,13 +97,13 @@ from("file:camel/input")
 
 ### Starting and ending a flow: From / To 
 
-The `from` and `to` methods allows one to connect an `endpoint` to another one. Endpoints are specified using URIs. The list of URIs supported by Camel is here: [http://camel.apache.org/uris.html]()
+The `from` and `to` methods allows one to connect an `endpoint` to another one. Endpoints are specified using URIs. The list of URIs supported by Camel is here: [http://camel.apache.org/uris.html](http://camel.apache.org/uris.html)
 
 ### Transforming data with unmarshal
 
 the `unmarshal` method implements a classical transformation that might exists between heterogeneous but standard data format. In our case, the goal is to transform a plain file into a list of CSV entries. 
 
-The list of all supported data formats available in Camel is here: [[http://camel.apache.org/data-format.html]]()
+The list of all supported data formats available in Camel is here: [http://camel.apache.org/uris.html](http://camel.apache.org/uris.html)
 
 With these classical transformation, you are expected to configure a DataFormat to align it with your very specific need, and then apply the transformation automatically. In our case, the configuration is the following:
 
