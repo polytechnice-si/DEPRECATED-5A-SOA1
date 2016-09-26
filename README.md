@@ -13,7 +13,7 @@ This repository is a set or _recipes_ to be used as a support for the SOA-1 cour
 The first version of this course (2012) was using Petals ESB. It then evolves to Mule (2013, 2014). Based on the feedback received from the students and according to the 8 weeks time box of the course, we finally decided to re-implement it (again...) using the open source suite developed by Apache. Thus, the technological stack is the following:
 
   * Enterprise Service Bus: [Apache Service Mix](http://servicemix.apache.org/) (7.0.0)
-  * Routing: [Apache Camel](http://camel.apache.org/) (2.15.2)
+  * Routing: [Apache Camel](http://camel.apache.org/) (2.16.3)
   * Service Definition: [Apache CXF](http://cxf.apache.org/)
     * SOAP: JAX-WS specification
     * REST: JAX-RS specification
